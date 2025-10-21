@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "wabU0oPMxmVZRR+tqr5Hdx5Oq45J2GjZ4Cu3r3ew7mI=",
+  "Source": "cinema.apigateway",
+  "BasePath": "_content/cinema.apigateway",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

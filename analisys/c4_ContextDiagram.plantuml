@@ -1,0 +1,20 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title CinemaAbyss — Диаграмма контекста (C4 Level 1)
+
+Person(user, "Пользователь", "Смотрит фильмы, оценивает, оформляет подписку")
+System(cinemaabyss, "CinemaAbyss", "Онлайн-кинотеатр с подпиской и каталогом фильмов")
+
+Enterprise_Boundary(external_systems, "Внешние системы") {
+    System_Ext(recommender, "Рекомендательная система", "Получает события о просмотрах и рейтингах")
+    System_Ext(payment_gateway, "Платёжные системы", "Обработка оплаты (Stripe, PayPal и др.)")
+    System_Ext(partner_cinemas, "Партнёрские кинотеатры", "Обмен метаданными и лицензиями")
+}
+
+Rel(user, cinemaabyss, "Использует", "HTTPS")
+Rel(cinemaabyss, recommender, "Публикует события", "Kafka")
+Rel(cinemaabyss, payment_gateway, "Интеграция", "HTTPS")
+Rel(cinemaabyss, partner_cinemas, "Обмен данными", "HTTPS")
+
+@enduml
