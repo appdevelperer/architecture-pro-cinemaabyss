@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((_, config) => config.WriteTo.Console());
-builder.WebHost.UseUrls("http://*:8400");
+// builder.WebHost.UseUrls("http://*:8000");
 
 var app = builder.Build();
 app.UseExceptionHandler(errorApp =>

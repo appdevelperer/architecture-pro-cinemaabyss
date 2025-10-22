@@ -29,6 +29,6 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
-EXPOSE 8400
-ENV ASPNETCORE_URLS=http://+:8400
-ENTRYPOINT ["dotnet", "cinema.apigateway.dll","--urls", "http://+:8400"]
+EXPOSE 8000
+ENV ASPNETCORE_URLS=http://+:8000
+ENTRYPOINT ["dotnet", "cinema.apigateway.dll","--urls", "http://+:8000"]
