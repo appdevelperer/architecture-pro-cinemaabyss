@@ -101,18 +101,18 @@ namespace Cinema.Events
             services
                 .AddSwaggerGenNewtonsoftSupport();
 
-            // Kafka Producer
-            services
-                .AddSingleton<ProducerConfig>(sp => new ProducerConfig
-                {
-                    BootstrapServers = "kafka:9092" // или ваш Kafka-брокер
-                });
+            // // Kafka Producer
+            // services
+            //     .AddSingleton<ProducerConfig>(sp => new ProducerConfig
+            //     {
+            //         BootstrapServers = "localhost:9092" // или ваш Kafka-брокер
+            //     });
             
-            services.AddSingleton<IKafkaEventPublisher, KafkaEventPublisher>();
+            // services.AddSingleton<IKafkaEventPublisher, KafkaEventPublisher>();
 
-            // Kafka Consumer (в фоне)
-            services
-                .AddHostedService<KafkaEventConsumer>();
+            // // Kafka Consumer (в фоне)
+            // services
+            //     .AddHostedService<KafkaEventConsumer>();
         }
 
         /// <summary>

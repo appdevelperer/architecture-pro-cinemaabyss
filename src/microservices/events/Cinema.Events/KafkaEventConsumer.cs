@@ -1,31 +1,37 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 public class KafkaEventConsumer : BackgroundService
 {
 
-     private readonly ILogger<KafkaEventConsumer> _logger;
-    private readonly string _bootstrapServers = "kafka:9092"; 
+    private readonly ILogger<KafkaEventConsumer> _logger;
+    private readonly string _bootstrapServers; 
     private readonly string _topic = "payment-events";
     private readonly string _groupId = "cinema-events-group";
 
 
-    public KafkaEventConsumer(ILogger<KafkaEventConsumer> logger)
+    public KafkaEventConsumer(ILogger<KafkaEventConsumer> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _bootstrapServers = configuration["KAFKA_BROKERS"] ?? "kafka:9092"; // для Docker
+        _logger.LogInformation("KafkaConsumer initialized with servers: {Servers}", _bootstrapServers);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation("Starting Kafka consumer execution...");
         var config = new ConsumerConfig
         {
             BootstrapServers = _bootstrapServers,
             GroupId = _groupId,
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
+        _logger.LogInformation("Consumer config created. Connecting to Kafka...");
+        
 
         using var consumer = new ConsumerBuilder<string, string>(config).Build();
         consumer.Subscribe(_topic);
