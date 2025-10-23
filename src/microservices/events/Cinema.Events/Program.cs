@@ -27,7 +27,7 @@ namespace Cinema.Events
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                    webBuilder.UseStartup<Startup>()
-                             .UseUrls("http://0.0.0.0:8000/");
+                             .UseUrls("http://localhost:8000", "https://localhost:8001");
                 });
     }
 }

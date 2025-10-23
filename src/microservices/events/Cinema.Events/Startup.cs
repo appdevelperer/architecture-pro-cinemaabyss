@@ -24,6 +24,7 @@ using Cinema.Events.Authentication;
 using Cinema.Events.Filters;
 using Cinema.Events.OpenApi;
 using Cinema.Events.Formatters;
+using Confluent.Kafka;
 
 namespace Cinema.Events
 {
@@ -97,8 +98,21 @@ namespace Cinema.Events
                     // Use [ValidateModelState] on Actions to actually validate it in C# as well!
                     c.OperationFilter<GeneratePathParamsValidationFilter>();
                 });
-                services
-                    .AddSwaggerGenNewtonsoftSupport();
+            services
+                .AddSwaggerGenNewtonsoftSupport();
+
+            // Kafka Producer
+            services
+                .AddSingleton<ProducerConfig>(sp => new ProducerConfig
+                {
+                    BootstrapServers = "kafka:9092" // или ваш Kafka-брокер
+                });
+            
+            services.AddSingleton<IKafkaEventPublisher, KafkaEventPublisher>();
+
+            // Kafka Consumer (в фоне)
+            services
+                .AddHostedService<KafkaEventConsumer>();
         }
 
         /// <summary>

@@ -19,6 +19,8 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Newtonsoft.Json;
 using Cinema.Events.Attributes;
 using Cinema.Events.Models;
+using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace Cinema.Events.Controllers
 { 
@@ -28,6 +30,15 @@ namespace Cinema.Events.Controllers
     [ApiController]
     public class PaymentsApiController : ControllerBase
     { 
+
+        private readonly IKafkaEventPublisher _kafka;
+        private readonly ILogger<PaymentsApiController> _logger;
+
+        public PaymentsApiController(IKafkaEventPublisher kafka, ILogger<PaymentsApiController> logger)
+        {
+            _kafka = kafka;
+            _logger = logger;
+        }
         /// <summary>
         /// Создание нового платежа
         /// </summary>
@@ -44,56 +55,71 @@ namespace Cinema.Events.Controllers
         [SwaggerResponse(statusCode: 201, type: typeof(Payment), description: "Платеж успешно создан")]
         [SwaggerResponse(statusCode: 400, type: typeof(Error), description: "Некорректный запрос")]
         [SwaggerResponse(statusCode: 500, type: typeof(Error), description: "Внутренняя ошибка сервера")]
-        public virtual IActionResult CreatePayment([FromBody]PaymentInput paymentInput)
+        public virtual async Task<IActionResult> CreatePayment([FromBody]PaymentInput paymentInput)
         {
 
-            //TODO: Uncomment the next line to return response 201 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(201, default);
-            //TODO: Uncomment the next line to return response 400 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(400, default);
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default);
-            string exampleJson = null;
-            exampleJson = "{\n  \"amount\" : 9.99,\n  \"user_id\" : 1,\n  \"id\" : 1,\n  \"timestamp\" : \"2023-01-15T14:30:00Z\"\n}";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
-            
-            var example = exampleJson != null
-            ? JsonConvert.DeserializeObject<Payment>(exampleJson)
-            : default;
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+            try
+            {
+                // Генерируем уникальный ID платежа (в реальности — из БД или ID-сервиса)
+                var paymentId = Random.Shared.Next(1000, 999999);
+                var timestamp = DateTime.UtcNow;
+
+                // Формируем Payment для ответа
+                var payment = new Payment
+                {
+                    Id = paymentId,
+                    UserId = paymentInput.UserId,
+                    Amount = paymentInput.Amount,
+                    Timestamp = timestamp
+                };
+
+                // Формируем событие платежа
+                var paymentEvent = new PaymentEvent
+                {
+                    PaymentId = payment.Id,
+                    UserId = payment.UserId,
+                    Amount = payment.Amount,
+                    Status = "completed",
+                    Timestamp = payment.Timestamp
+                };
+
+                // Публикуем событие в Kafka
+                var eventId = Guid.NewGuid().ToString();
+                var @event = new Event
+                {
+                    Id = eventId,
+                    Type = "payment",
+                    Timestamp = timestamp,
+                    Payload = paymentEvent
+                };
+
+                var eventData = JsonConvert.SerializeObject(@event);
+                await _kafka.PublishAsync("cinema.events", eventId, eventData);
+
+                _logger.LogInformation("Published payment event: {EventId} for payment {PaymentId}", eventId, payment.Id);
+
+                // Возвращаем 201 Created
+                return CreatedAtRoute("GetPaymentById", new { id = payment.Id }, payment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create payment or publish event");
+                return StatusCode(500, new Error {  VarError = "Internal Server Error" });
+            }
         }
 
-        /// <summary>
-        /// Получение списка всех платежей
-        /// </summary>
-        /// <remarks>Возвращает список всех платежей в системе</remarks>
-        /// <param name="userId">ID пользователя для фильтрации платежей</param>
-        /// <response code="200">Успешный ответ</response>
-        /// <response code="500">Внутренняя ошибка сервера</response>
+       /// <response code="500">Внутренняя ошибка сервера</response>
         [HttpGet]
         [Route("/api/payments")]
         [ValidateModelState]
         [SwaggerOperation("GetAllPayments")]
         [SwaggerResponse(statusCode: 200, type: typeof(List<Payment>), description: "Успешный ответ")]
         [SwaggerResponse(statusCode: 500, type: typeof(Error), description: "Внутренняя ошибка сервера")]
-        public virtual IActionResult GetAllPayments([FromQuery (Name = "user_id")]int? userId)
+        public virtual IActionResult GetAllPayments([FromQuery(Name = "user_id")] int? userId)
         {
-
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default);
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default);
-            string exampleJson = null;
-            exampleJson = "[ {\n  \"amount\" : 9.99,\n  \"user_id\" : 1,\n  \"id\" : 1,\n  \"timestamp\" : \"2023-01-15T14:30:00Z\"\n}, {\n  \"amount\" : 9.99,\n  \"user_id\" : 1,\n  \"id\" : 1,\n  \"timestamp\" : \"2023-01-15T14:30:00Z\"\n} ]";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
-            
-            var example = exampleJson != null
-            ? JsonConvert.DeserializeObject<List<Payment>>(exampleJson)
-            : default;
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+            // В микросервисе событий нет хранилища платежей → возвращаем пустой список
+            // (либо можно вернуть ошибку 404/501, но по спецификации ожидается 200)
+            return Ok(new List<Payment>());
         }
     }
 }

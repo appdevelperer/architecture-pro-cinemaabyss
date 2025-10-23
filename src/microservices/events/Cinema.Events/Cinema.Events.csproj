@@ -9,17 +9,19 @@
         <Version>1.0.0</Version>
         <AssemblyName>Cinema.Events</AssemblyName>
         <PackageId>Cinema.Events</PackageId>
-        <UserSecretsId>64638ec3-f479-45db-b8b9-9fe12f4bf237</UserSecretsId>
+        <UserSecretsId>106a6ec9-2ccc-4e06-8444-95a1b4080cb7</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <DockerfileContext>..\..</DockerfileContext>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="Confluent.Kafka" Version="2.12.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.8" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.4.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.4.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.4.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
         <PackageReference Include="JsonSubTypes" Version="1.8.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.6" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="9.0.6" />
     </ItemGroup>
     <ItemGroup>
         <!--<DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.0" />-->
