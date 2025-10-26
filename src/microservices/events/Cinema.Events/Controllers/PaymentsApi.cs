@@ -30,15 +30,20 @@ namespace Cinema.Events.Controllers
     [ApiController]
     public class PaymentsApiController : ControllerBase
     { 
-
         private readonly IKafkaEventPublisher _kafka;
+        private readonly IKafkaEventReader _kafkaReader;
         private readonly ILogger<PaymentsApiController> _logger;
 
-        public PaymentsApiController(IKafkaEventPublisher kafka, ILogger<PaymentsApiController> logger)
+        public PaymentsApiController(
+            IKafkaEventPublisher kafka,
+            IKafkaEventReader kafkaReader,
+            ILogger<PaymentsApiController> logger)
         {
             _kafka = kafka;
+            _kafkaReader = kafkaReader;
             _logger = logger;
         }
+    
         /// <summary>
         /// Создание нового платежа
         /// </summary>
@@ -55,11 +60,13 @@ namespace Cinema.Events.Controllers
         [SwaggerResponse(statusCode: 201, type: typeof(Payment), description: "Платеж успешно создан")]
         [SwaggerResponse(statusCode: 400, type: typeof(Error), description: "Некорректный запрос")]
         [SwaggerResponse(statusCode: 500, type: typeof(Error), description: "Внутренняя ошибка сервера")]
-        public virtual async Task<IActionResult> CreatePayment([FromBody]PaymentInput paymentInput)
+        public virtual IActionResult CreatePayment([FromBody]PaymentInput paymentInput)
         {
 
             try
             {
+                _logger.LogInformation("Entered CreatePayment");
+
                 // Генерируем уникальный ID платежа (в реальности — из БД или ID-сервиса)
                 var paymentId = Random.Shared.Next(1000, 999999);
                 var timestamp = DateTime.UtcNow;
@@ -94,12 +101,11 @@ namespace Cinema.Events.Controllers
                 };
 
                 var eventData = JsonConvert.SerializeObject(@event);
-                await _kafka.PublishAsync("cinema.events", eventId, eventData);
+                _kafka.PublishAsync("payment-events", eventId, eventData);
 
                 _logger.LogInformation("Published payment event: {EventId} for payment {PaymentId}", eventId, payment.Id);
 
-                // Возвращаем 201 Created
-                return CreatedAtRoute("GetPaymentById", new { id = payment.Id }, payment);
+                return new ObjectResult(payment); //Created($"/api/payments/{payment.Id}", payment);
             }
             catch (Exception ex)
             {
@@ -117,9 +123,42 @@ namespace Cinema.Events.Controllers
         [SwaggerResponse(statusCode: 500, type: typeof(Error), description: "Внутренняя ошибка сервера")]
         public virtual IActionResult GetAllPayments([FromQuery(Name = "user_id")] int? userId)
         {
-            // В микросервисе событий нет хранилища платежей → возвращаем пустой список
-            // (либо можно вернуть ошибку 404/501, но по спецификации ожидается 200)
-            return Ok(new List<Payment>());
+            try
+            {
+                _logger.LogInformation("Reading payment events from Kafka...");
+                
+                // Читаем события из Kafka
+                var paymentEventsJson = _kafkaReader.ReadPaymentEvents(maxMessages: 50);
+                var paymentEvents = new List<PaymentEvent>();
+
+                foreach (var eventJson in paymentEventsJson)
+                {
+                    try
+                    {
+                        var paymentEvent = JsonConvert.DeserializeObject<KafkaEvent>(eventJson);
+                        if (paymentEvent != null)
+                        {
+                            // Фильтрация по user_id если указан
+                            if (userId == null || paymentEvent.Payload.UserId == userId)
+                            {
+                                paymentEvents.Add(paymentEvent.Payload);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to deserialize payment event: {EventJson}", eventJson);
+                    }
+                }
+
+                _logger.LogInformation("Returning {Count} payment events", paymentEvents.Count);
+                return new ObjectResult(paymentEvents);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to read payment events from Kafka");
+                return StatusCode(500, new Error { VarError = "Failed to read payment events" });
+            }
         }
     }
 }

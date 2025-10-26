@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
@@ -24,6 +25,10 @@ public class KafkaEventConsumer : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Starting Kafka consumer execution...");
+
+        await Task.Delay(5000, stoppingToken);
+
+        
         var config = new ConsumerConfig
         {
             BootstrapServers = _bootstrapServers,
@@ -38,18 +43,37 @@ public class KafkaEventConsumer : BackgroundService
 
         _logger.LogInformation("Kafka consumer started, listening to topic: {Topic}", _topic);
 
-        while (!stoppingToken.IsCancellationRequested)
+        
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                var result = consumer.Consume(stoppingToken);
-                _logger.LogInformation("Received event: Key={Key}, Value={Value}", 
-                    result.Message.Key, result.Message.Value);
+                try
+                {
+                    // Используем асинхронное потребление с таймаутом
+                    var result = consumer.Consume(TimeSpan.FromMilliseconds(1000));
+
+                    if (result != null)
+                    {
+                        _logger.LogInformation("Received event: Key={Key}, Value={Value}",
+                            result.Message.Key, result.Message.Value);
+
+                        consumer.Commit(result);
+                    }
+                }
+                catch (ConsumeException e)
+                {
+                    _logger.LogError(e, "Error consuming message");
+                }
+                
+                // Даем возможность другим задачам выполняться
+                await Task.Yield();
             }
-            catch (ConsumeException e)
-            {
-                _logger.LogError(e, "Error consuming message");
-            }
+        }
+        finally
+        {
+            consumer.Close();
+            _logger.LogInformation("Kafka consumer stopped");
         }
     }
 }

@@ -7,12 +7,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 
-
 var builder = WebApplication.CreateBuilder(args);
+
+// Явно настройте логирование ПЕРВЫМ делом
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
+Console.WriteLine("=== APPLICATION STARTING ===");
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -21,46 +23,89 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("1.0.0", new() { Title = "Cinema Events API", Version = "1.0.0" });
 });
 
-Console.WriteLine("Kafka parts is starting...");
+Console.WriteLine("=== KAFKA SERVICES REGISTRATION STARTING ===");
 
 // Kafka Producer
-builder.Services
-    .AddSingleton<ProducerConfig>(sp => new ProducerConfig
+try
+{
+    Console.WriteLine("Registering ProducerConfig...");
+    builder.Services.AddSingleton<ProducerConfig>(new ProducerConfig
     {
-        BootstrapServers = "kafka:9092" // или ваш Kafka-брокер
+        BootstrapServers = "kafka:9092"
     });
+    Console.WriteLine("ProducerConfig registered successfully");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error registering ProducerConfig: {ex}");
+}
 
-builder.Services.AddSingleton<IKafkaEventPublisher, KafkaEventPublisher>();
+// Kafka Publisher
+try
+{
+    Console.WriteLine("Registering IKafkaEventPublisher...");
+    builder.Services.AddSingleton<IKafkaEventPublisher, KafkaEventPublisher>();
+    Console.WriteLine("IKafkaEventPublisher registered successfully");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error registering IKafkaEventPublisher: {ex}");
+}
 
 // Kafka Consumer
-builder.Services.AddHostedService<KafkaEventConsumer>();
+try
+{
+    Console.WriteLine("Registering KafkaEventConsumer...");
+    // builder.Services.AddHostedService<KafkaEventConsumer>();
+    builder.Services.AddSingleton<IKafkaEventReader, KafkaEventReader>();
+    Console.WriteLine("KafkaEventConsumer registered successfully");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error registering KafkaEventConsumer: {ex}");
+}
 
+Console.WriteLine("=== ALL SERVICES REGISTERED ===");
 
 var app = builder.Build();
 
+// Проверка зарегистрированных сервисов
+try
+{
+    Console.WriteLine("=== CHECKING REGISTERED SERVICES ===");
+    using var scope = app.Services.CreateScope();
+    var serviceProvider = scope.ServiceProvider;
+    
+    var kafkaPublisher = serviceProvider.GetService<IKafkaEventPublisher>();
+    Console.WriteLine($"IKafkaEventPublisher: {kafkaPublisher != null}");
+    
+    var producerConfig = serviceProvider.GetService<ProducerConfig>();
+    Console.WriteLine($"ProducerConfig: {producerConfig != null}");
+    
+    var kafkaConsumer = serviceProvider.GetService<KafkaEventConsumer>();
+    Console.WriteLine($"KafkaEventConsumer: {kafkaConsumer != null}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error checking services: {ex}");
+}
 
 app.UseDeveloperExceptionPage();
 
-
-// Включите Swagger middleware
 app.UseSwagger(c =>
 {
-    c.RouteTemplate = "openapi/{documentName}/openapi.json"; // стандартный путь
+    c.RouteTemplate = "openapi/{documentName}/openapi.json";
 });
 
 app.UseSwaggerUI(c => 
 {
-                    // set route prefix to openapi, e.g. http://localhost:8082/openapi/index.html
-                    c.RoutePrefix = "openapi";
-                    //TODO: Either use the SwaggerGen generated OpenAPI contract (generated from C# classes)
-                    c.SwaggerEndpoint("/openapi/1.0.0/openapi.json", "CinemaAbyss API");
+    c.RoutePrefix = "openapi";
+    c.SwaggerEndpoint("/openapi/1.0.0/openapi.json", "CinemaAbyss API");
 });
 
 app.UseRouting();
 app.MapControllers();
 
-Console.WriteLine("Application is starting...");
-Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
-Console.WriteLine($"Application Name: {app.Environment.ApplicationName}");
+Console.WriteLine("=== APPLICATION CONFIGURED ===");
 
 app.Run();

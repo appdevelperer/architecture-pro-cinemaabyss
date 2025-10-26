@@ -19,7 +19,7 @@ using Newtonsoft.Json;
 using Cinema.Events.Converters;
 
 namespace Cinema.Events.Models
-{ 
+{
     /// <summary>
     /// 
     /// </summary>
@@ -32,7 +32,7 @@ namespace Cinema.Events.Models
         /// <value>Идентификатор платежа</value>
         /* <example>1</example> */
         [Required]
-        [DataMember(Name="payment_id", EmitDefaultValue=true)]
+        [DataMember(Name = "payment_id", EmitDefaultValue = true)]
         public int PaymentId { get; set; }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Cinema.Events.Models
         /// <value>Идентификатор пользователя</value>
         /* <example>1</example> */
         [Required]
-        [DataMember(Name="user_id", EmitDefaultValue=true)]
+        [DataMember(Name = "user_id", EmitDefaultValue = true)]
         public int UserId { get; set; }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Cinema.Events.Models
         /// <value>Сумма платежа</value>
         /* <example>9.99</example> */
         [Required]
-        [DataMember(Name="amount", EmitDefaultValue=true)]
+        [DataMember(Name = "amount", EmitDefaultValue = true)]
         public float Amount { get; set; }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Cinema.Events.Models
         /// <value>Статус платежа</value>
         /* <example>completed</example> */
         [Required]
-        [DataMember(Name="status", EmitDefaultValue=false)]
+        [DataMember(Name = "status", EmitDefaultValue = false)]
         public string Status { get; set; }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Cinema.Events.Models
         /// <value>Время платежа</value>
         /* <example>2023-01-15T14:30Z</example> */
         [Required]
-        [DataMember(Name="timestamp", EmitDefaultValue=true)]
+        [DataMember(Name = "timestamp", EmitDefaultValue = true)]
         public DateTime Timestamp { get; set; }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Cinema.Events.Models
         /// </summary>
         /// <value>Тип метода оплаты (опционально)</value>
         /* <example>credit_card</example> */
-        [DataMember(Name="method_type", EmitDefaultValue=false)]
+        [DataMember(Name = "method_type", EmitDefaultValue = false)]
         public string MethodType { get; set; }
 
         /// <summary>
@@ -128,32 +128,32 @@ namespace Cinema.Events.Models
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            return 
+            return
                 (
                     PaymentId == other.PaymentId ||
-                    
+
                     PaymentId.Equals(other.PaymentId)
-                ) && 
+                ) &&
                 (
                     UserId == other.UserId ||
-                    
+
                     UserId.Equals(other.UserId)
-                ) && 
+                ) &&
                 (
                     Amount == other.Amount ||
-                    
+
                     Amount.Equals(other.Amount)
-                ) && 
+                ) &&
                 (
                     Status == other.Status ||
                     Status != null &&
                     Status.Equals(other.Status)
-                ) && 
+                ) &&
                 (
                     Timestamp == other.Timestamp ||
-                    
+
                     Timestamp.Equals(other.Timestamp)
-                ) && 
+                ) &&
                 (
                     MethodType == other.MethodType ||
                     MethodType != null &&
@@ -171,24 +171,24 @@ namespace Cinema.Events.Models
             {
                 var hashCode = 41;
                 // Suitable nullity checks etc, of course :)
-                    
-                    hashCode = hashCode * 59 + PaymentId.GetHashCode();
-                    
-                    hashCode = hashCode * 59 + UserId.GetHashCode();
-                    
-                    hashCode = hashCode * 59 + Amount.GetHashCode();
-                    if (Status != null)
+
+                hashCode = hashCode * 59 + PaymentId.GetHashCode();
+
+                hashCode = hashCode * 59 + UserId.GetHashCode();
+
+                hashCode = hashCode * 59 + Amount.GetHashCode();
+                if (Status != null)
                     hashCode = hashCode * 59 + Status.GetHashCode();
-                    
-                    hashCode = hashCode * 59 + Timestamp.GetHashCode();
-                    if (MethodType != null)
+
+                hashCode = hashCode * 59 + Timestamp.GetHashCode();
+                if (MethodType != null)
                     hashCode = hashCode * 59 + MethodType.GetHashCode();
                 return hashCode;
             }
         }
 
         #region Operators
-        #pragma warning disable 1591
+#pragma warning disable 1591
 
         public static bool operator ==(PaymentEvent left, PaymentEvent right)
         {
@@ -200,7 +200,23 @@ namespace Cinema.Events.Models
             return !Equals(left, right);
         }
 
-        #pragma warning restore 1591
+#pragma warning restore 1591
         #endregion Operators
+    }
+    
+    [DataContract]
+    public class KafkaEvent
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; }
+        
+        [JsonProperty("type")]
+        public string Type { get; set; }
+        
+        [JsonProperty("timestamp")]
+        public DateTime Timestamp { get; set; }
+        
+        [JsonProperty("payload")]
+        public PaymentEvent Payload { get; set; }
     }
 }
