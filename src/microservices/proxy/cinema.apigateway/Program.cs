@@ -66,14 +66,29 @@ app.Use(async (context, next) =>
         }
 
         var response = await httpClient.SendAsync(requestMessage, context.RequestAborted);
-
+        // === ВАЖНО: не копируем проблемные заголовки ===
+        var headersToSkip = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Transfer-Encoding",
+            "Connection",
+            "Keep-Alive",
+            "Proxy-Authenticate",
+            "Proxy-Connection",
+            "TE",
+            "Trailer",
+            "Upgrade",
+            "Content-Length" // Kestrel сам установит, если нужно
+        };
         context.Response.StatusCode = (int)response.StatusCode;
         foreach (var header in response.Headers.Concat(response.Content.Headers))
         {
-            context.Response.Headers[header.Key] = header.Value.ToArray();
+            if (!headersToSkip.Contains(header.Key))
+            {
+                context.Response.Headers[header.Key] = header.Value.ToArray();
+            }
         }
 
-        await response.Content.CopyToAsync(context.Response.Body);
+        await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
         return;
     }
 
