@@ -66,6 +66,7 @@ namespace Cinema.Events.Controllers
             try
             {
                 _logger.LogInformation("Entered CreatePayment");
+                Console.WriteLine("=== 1 ===");
 
                 // Генерируем уникальный ID платежа (в реальности — из БД или ID-сервиса)
                 var paymentId = Random.Shared.Next(1000, 999999);
@@ -100,12 +101,18 @@ namespace Cinema.Events.Controllers
                     Payload = paymentEvent
                 };
 
+                Console.WriteLine("=== 2 ===");
                 var eventData = JsonConvert.SerializeObject(@event);
                 _kafka.PublishAsync("payment-events", eventId, eventData);
-
+                throw new Exception("ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss");
                 _logger.LogInformation("Published payment event: {EventId} for payment {PaymentId}", eventId, payment.Id);
-
-                return new ObjectResult(payment); //Created($"/api/payments/{payment.Id}", payment);
+                _logger.LogInformation("й1");
+                Console.WriteLine("=== 3 ===");
+                throw new Exception("sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss");
+                return new ObjectResult(payment)
+                            {
+                                StatusCode = 201
+                            }; //Created($"/api/payments/{payment.Id}", payment);
             }
             catch (Exception ex)
             {
