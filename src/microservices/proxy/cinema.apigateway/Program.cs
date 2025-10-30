@@ -161,7 +161,7 @@ app.Use(async (context, next) =>
 
 app.Run(async context =>
 {
-        context.Response.StatusCode = 405;
+        context.Response.StatusCode = 200;
         return;
 });
 
