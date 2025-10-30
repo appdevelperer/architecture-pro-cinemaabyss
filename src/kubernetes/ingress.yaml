@@ -18,3 +18,17 @@ spec:
                 name: events-service
                 port:
                   number: 8082
+          - path: /api/movies
+            pathType: Prefix
+            backend:
+              service:
+                name: proxy-service
+                port:
+                  number: 8000
+          # - path: /api/movies
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: movies-service
+          #       port:
+          #         number: 8081                  

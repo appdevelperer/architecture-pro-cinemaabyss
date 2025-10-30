@@ -4,8 +4,8 @@
     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
 3.  Описание сервисов доступно (при развертывании в docker):
     - монолит: http://localhost:8080/api/movies
-    - movie-service: http://localhost:8081/api/movies
-    - proxy-service: http://localhost:8000/api/movies
+    - movie-service: http://localhost:8081/api/movies - возвращает список фильмов из сервиса
+    - proxy-service: http://localhost:8000/api/proxy
     - event-service: http://localhost:8082/openapi/index.html
 4.  При развертывании в k8s:
     - event-service: http://cinemaabyss.example.com/api/events/health

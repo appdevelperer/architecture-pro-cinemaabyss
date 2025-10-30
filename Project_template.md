@@ -249,6 +249,11 @@ cat .docker/config.json | base64
   - добавьте аддон
   ```bash
   minikube addons enable ingress
+
+  Я ИСПОЛЬЗОВАЛ
+  kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/cloud/deploy.yaml
+
+
   ```
   ```bash
   kubectl apply -f src/kubernetes/ingress.yaml

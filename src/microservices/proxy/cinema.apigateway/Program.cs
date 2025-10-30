@@ -161,7 +161,8 @@ app.Use(async (context, next) =>
 
 app.Run(async context =>
 {
-    throw new Exception("Fallback triggered — this means /api/movies did NOT match!");
+        context.Response.StatusCode = 405;
+        return;
 });
 
 
