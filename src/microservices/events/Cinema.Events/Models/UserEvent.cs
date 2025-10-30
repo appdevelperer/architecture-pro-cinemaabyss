@@ -43,12 +43,22 @@ namespace Cinema.Events.Models
         [DataMember(Name="username", EmitDefaultValue=false)]
         public string Username { get; set; }
 
+
+        /// <summary>
+        /// Статус 
+        /// </summary>
+        /// <value>Статус </value>
+        /* <example>completed</example> */
+
+        [DataMember(Name = "status", EmitDefaultValue = false)]
+        public string Status { get; set; }
+
         /// <summary>
         /// Email пользователя (опционально)
         /// </summary>
         /// <value>Email пользователя (опционально)</value>
         /* <example>john.doe@example.com</example> */
-        [DataMember(Name="email", EmitDefaultValue=false)]
+        [DataMember(Name = "email", EmitDefaultValue = false)]
         public string Email { get; set; }
 
         /// <summary>

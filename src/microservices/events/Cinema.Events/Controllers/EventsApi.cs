@@ -19,6 +19,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Newtonsoft.Json;
 using Cinema.Events.Attributes;
 using Cinema.Events.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Cinema.Events.Controllers
 { 
@@ -28,6 +29,22 @@ namespace Cinema.Events.Controllers
     [ApiController]
     public class EventsApiController : ControllerBase
     { 
+        private readonly IKafkaEventPublisher _kafka;
+        private readonly IKafkaEventReader _kafkaReader;
+        private readonly ILogger<EventsApiController> _logger;
+
+
+        // Конструктор для внедрения зависимостей
+        public EventsApiController(
+            IKafkaEventPublisher kafka,
+            IKafkaEventReader kafkaReader,
+            ILogger<EventsApiController> logger)
+        {
+            _kafka = kafka ?? throw new ArgumentNullException(nameof(kafka));
+            _kafkaReader = kafkaReader ?? throw new ArgumentNullException(nameof(kafkaReader));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+    
         /// <summary>
         /// Создание события фильма
         /// </summary>
@@ -47,22 +64,11 @@ namespace Cinema.Events.Controllers
         public virtual IActionResult CreateMovieEvent([FromBody]MovieEvent movieEvent)
         {
 
-            //TODO: Uncomment the next line to return response 201 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(201, default);
-            //TODO: Uncomment the next line to return response 400 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(400, default);
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default);
-            string exampleJson = null;
-            exampleJson = "{\n  \"partition\" : 0,\n  \"offset\" : 42,\n  \"event\" : {\n    \"payload\" : \"{}\",\n    \"id\" : \"movie-1-viewed\",\n    \"type\" : \"movie\",\n    \"timestamp\" : \"2023-01-15T14:30:00Z\"\n  },\n  \"status\" : \"success\"\n}";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
-            
-            var example = exampleJson != null
-            ? JsonConvert.DeserializeObject<EventResponse>(exampleJson)
-            : default;
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+            movieEvent.Status = "success";
+            return new ObjectResult(movieEvent)
+                            {
+                                StatusCode = 201
+                            }; //Created($"/api/payments/{payment.Id}", payment);
         }
 
         /// <summary>
@@ -84,22 +90,55 @@ namespace Cinema.Events.Controllers
         public virtual IActionResult CreatePaymentEvent([FromBody]PaymentEvent paymentEvent)
         {
 
-            //TODO: Uncomment the next line to return response 201 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(201, default);
-            //TODO: Uncomment the next line to return response 400 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(400, default);
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default);
-            string exampleJson = null;
-            exampleJson = "{\n  \"partition\" : 0,\n  \"offset\" : 42,\n  \"event\" : {\n    \"payload\" : \"{}\",\n    \"id\" : \"movie-1-viewed\",\n    \"type\" : \"movie\",\n    \"timestamp\" : \"2023-01-15T14:30:00Z\"\n  },\n  \"status\" : \"success\"\n}";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
+            try
+            {
+                _logger.LogInformation("Entered CreatePayment");
+                Console.WriteLine("=== 1 ===");
+
+                // Генерируем уникальный ID платежа (в реальности — из БД или ID-сервиса)
+                var paymentId = Random.Shared.Next(1000, 999999);
+                var timestamp = DateTime.UtcNow;
+
             
-            var example = exampleJson != null
-            ? JsonConvert.DeserializeObject<EventResponse>(exampleJson)
-            : default;
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+
+                // Формируем событие платежа
+                 paymentEvent = new PaymentEvent
+                {
+                    PaymentId = paymentId,
+                    UserId = paymentEvent.UserId,
+                    Amount = paymentEvent.Amount,
+                    Status = "success",
+                    Timestamp = timestamp
+                };
+
+                // Публикуем событие в Kafka
+                var eventId = Guid.NewGuid().ToString();
+                var @event = new Event
+                {
+                    Id = eventId,
+                    Type = "payment",
+                    Timestamp = timestamp,
+                    Payload = paymentEvent
+                };
+
+                Console.WriteLine("=== 2 ===");
+                var eventData = JsonConvert.SerializeObject(@event);
+                _kafka.PublishAsync("payment-events", eventId, eventData);
+               
+                _logger.LogInformation("Published payment event: {EventId} for payment {PaymentId}", eventId, paymentId);
+                _logger.LogInformation("й1");
+                Console.WriteLine("=== 3 ===");
+                
+                return new ObjectResult(paymentEvent)
+                            {
+                                StatusCode = 201
+                            }; //Created($"/api/payments/{payment.Id}", payment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create payment or publish event");
+                return StatusCode(500, new Error {  VarError = "Internal Server Error" });
+            }
         }
 
         /// <summary>
@@ -118,25 +157,62 @@ namespace Cinema.Events.Controllers
         [SwaggerResponse(statusCode: 201, type: typeof(EventResponse), description: "Событие успешно создано")]
         [SwaggerResponse(statusCode: 400, type: typeof(Error), description: "Некорректный запрос")]
         [SwaggerResponse(statusCode: 500, type: typeof(Error), description: "Внутренняя ошибка сервера")]
-        public virtual IActionResult CreateUserEvent([FromBody]UserEvent userEvent)
+        public virtual IActionResult CreateUserEvent([FromBody] UserEvent userEvent)
         {
 
-            //TODO: Uncomment the next line to return response 201 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(201, default);
-            //TODO: Uncomment the next line to return response 400 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(400, default);
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default);
-            string exampleJson = null;
-            exampleJson = "{\n  \"partition\" : 0,\n  \"offset\" : 42,\n  \"event\" : {\n    \"payload\" : \"{}\",\n    \"id\" : \"movie-1-viewed\",\n    \"type\" : \"movie\",\n    \"timestamp\" : \"2023-01-15T14:30:00Z\"\n  },\n  \"status\" : \"success\"\n}";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
-            exampleJson = "{\n  \"error\" : \"Internal Server Error\"\n}";
-            
-            var example = exampleJson != null
-            ? JsonConvert.DeserializeObject<EventResponse>(exampleJson)
-            : default;
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+            userEvent.Status = "success";
+            return new ObjectResult(userEvent)
+                            {
+                                StatusCode = 201
+                            }; //Created($"/api/payments/{payment.Id}", payment);
         }
+        
+            /// <response code="500">Внутренняя ошибка сервера</response>
+        [HttpGet]
+        [Route("/api/events/payment")]
+        [ValidateModelState]
+        [SwaggerOperation("GetAllPayments")]
+        [SwaggerResponse(statusCode: 200, type: typeof(List<Payment>), description: "Успешный ответ")]
+        [SwaggerResponse(statusCode: 500, type: typeof(Error), description: "Внутренняя ошибка сервера")]
+        public virtual IActionResult GetAllPayments([FromQuery(Name = "user_id")] int? userId)
+        {
+            try
+            {
+                _logger.LogInformation("Reading payment events from Kafka...");
+                
+                // Читаем события из Kafka
+                var paymentEventsJson = _kafkaReader.ReadPaymentEvents(maxMessages: 50);
+                var paymentEvents = new List<PaymentEvent>();
+
+                foreach (var eventJson in paymentEventsJson)
+                {
+                    try
+                    {
+                        var paymentEvent = JsonConvert.DeserializeObject<KafkaEvent>(eventJson);
+                        if (paymentEvent != null)
+                        {
+                            // Фильтрация по user_id если указан
+                            if (userId == null || paymentEvent.Payload.UserId == userId)
+                            {
+                                paymentEvents.Add(paymentEvent.Payload);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to deserialize payment event: {EventJson}", eventJson);
+                    }
+                }
+
+                _logger.LogInformation("Returning {Count} payment events", paymentEvents.Count);
+                return new ObjectResult(paymentEvents);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to read payment events from Kafka");
+                return StatusCode(500, new Error { VarError = "Failed to read payment events" });
+            }
+        }
+    
     }
 }

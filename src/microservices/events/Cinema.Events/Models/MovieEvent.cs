@@ -66,8 +66,17 @@ namespace Cinema.Events.Models
         /// </summary>
         /// <value>Рейтинг (опционально)</value>
         /* <example>8.5</example> */
-        [DataMember(Name="rating", EmitDefaultValue=true)]
+        [DataMember(Name = "rating", EmitDefaultValue = true)]
         public float Rating { get; set; }
+        
+        /// <summary>
+        /// Статус 
+        /// </summary>
+        /// <value>Статус </value>
+        /* <example>completed</example> */
+
+        [DataMember(Name = "status", EmitDefaultValue = false)]
+        public string Status { get; set; }
 
         /// <summary>
         /// Жанры фильма (опционально)

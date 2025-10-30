@@ -33,18 +33,81 @@ if (!int.TryParse(migrationPercentStr, out var migrationPercent) || migrationPer
 
 var random = new Random();
 
-// Health check — остаётся
+
 app.MapGet("/health", () => Results.Json(new { status = "ok", service = "proxy" }));
 
-// Middleware ДО fallback
+// app.MapGet("/api/movies", moviesApp =>
+// {
+//     moviesApp.Use(async (context, next) =>
+//     {
+//         // Тот же код проксирования...
+//     });
+
+// });
 app.Use(async (context, next) =>
 {
     // ✅ Правильная проверка пути
     if (context.Request.Path.StartsWithSegments("/api/movies"))
     {
         var useMoviesService = random.Next(100) < migrationPercent;
-        var targetBase = useMoviesService 
-            ? "http://movies-service:8081"  
+        var targetBase = useMoviesService
+            ? "http://movies-service:8081"
+            : "http://monolith:8080";
+
+        var targetUrl = $"{targetBase}{context.Request.Path}{context.Request.QueryString}";
+
+        Log.Information("Routing {Path} to {Target} (Movies: {UseMovies}%)",
+            context.Request.Path, useMoviesService ? "Movies Service" : "Monolith", migrationPercent);
+
+        var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUrl);
+
+        foreach (var header in context.Request.Headers)
+        {
+            if (header.Key != "Host")
+                requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+        }
+
+        if (context.Request.ContentLength > 0 || !HttpMethods.IsGet(context.Request.Method))
+        {
+            requestMessage.Content = new StreamContent(context.Request.Body);
+        }
+
+        var response = await httpClient.SendAsync(requestMessage, context.RequestAborted);
+        // === ВАЖНО: не копируем проблемные заголовки ===
+        var headersToSkip = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Transfer-Encoding",
+            "Connection",
+            "Keep-Alive",
+            "Proxy-Authenticate",
+            "Proxy-Connection",
+            "TE",
+            "Trailer",
+            "Upgrade",
+            "Content-Length" // Kestrel сам установит, если нужно
+        };
+        context.Response.StatusCode = (int)response.StatusCode;
+        foreach (var header in response.Headers.Concat(response.Content.Headers))
+        {
+            if (!headersToSkip.Contains(header.Key))
+            {
+                context.Response.Headers[header.Key] = header.Value.ToArray();
+            }
+        }
+
+        await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
+        return;
+    }
+    else if (context.Request.Path.StartsWithSegments("/health"))
+    {
+        context.Response.StatusCode = 200;
+        return;
+    }
+    else if (context.Request.Path.StartsWithSegments("/api/users"))
+    {
+       var useMoviesService = random.Next(100) < migrationPercent;
+        var targetBase = useMoviesService
+            ? "http://movies-service:8081"
             : "http://monolith:8080";
 
         var targetUrl = $"{targetBase}{context.Request.Path}{context.Request.QueryString}";
