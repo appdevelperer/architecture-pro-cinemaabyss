@@ -107,7 +107,7 @@ app.Use(async (context, next) =>
     {
        var useMoviesService = random.Next(100) < migrationPercent;
         var targetBase = useMoviesService
-            ? "http://movies-service:8081"
+            ? "http://monolith:8080"
             : "http://monolith:8080";
 
         var targetUrl = $"{targetBase}{context.Request.Path}{context.Request.QueryString}";
