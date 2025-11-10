@@ -32,3 +32,11 @@ spec:
           #       name: movies-service
           #       port:
           #         number: 8081                  
+          #   http://localhost:8082/openapi/index.html
+          - path: /openapi
+            pathType: Prefix
+            backend:
+              service:
+                name: events-service
+                port:
+                  number: 8082

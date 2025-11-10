@@ -9,5 +9,9 @@
     - event-service: http://localhost:8082/openapi/index.html
 4.  При развертывании в k8s:
     - event-service: http://cinemaabyss.example.com/api/events/health
+    - movie-service: https://cinemaabyss.example.com/api/movies
 5.  Запуск тестов в данном проекте
     - imiroedov@miroedov:~/Development/sprint_2/architecture-pro-cinemaabyss/tests/postman$ ./run-tests.sh
+6.  Запуск k8s
+    - Project_template, швг 2
+7. 

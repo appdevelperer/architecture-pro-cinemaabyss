@@ -248,7 +248,7 @@ cat .docker/config.json | base64
 
   - добавьте аддон
   ```bash
-  minikube addons enable ingress
+  minikube addons enable ingress --> ЭТО НЕ ДЕЛАЛ
 
   Я ИСПОЛЬЗОВАЛ
   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/cloud/deploy.yaml
@@ -263,7 +263,7 @@ cat .docker/config.json | base64
 
   10. Вызовите
   ```bash
-  minikube tunnel
+  minikube tunnel --> ЭТО НЕ ДЕЛАЛ
   ```
   11. Вызовите https://cinemaabyss.example.com/api/movies
   Вы должны увидеть вывод списка фильмов
@@ -277,7 +277,7 @@ cat .docker/config.json | base64
   Откройте логи event-service и сделайте скриншот обработки событий
 
 #### Шаг 3
-Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
+Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и скриншот вывода event-service после вызова тестов.
 
 
 ## Задание 4

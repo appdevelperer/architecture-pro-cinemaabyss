@@ -94,13 +94,13 @@ app.UseDeveloperExceptionPage();
 
 app.UseSwagger(c =>
 {
-    c.RouteTemplate = "openapi/{documentName}/openapi.json";
+    c.RouteTemplate = "api/events/openapi/{documentName}/openapi.json";
 });
 
 app.UseSwaggerUI(c => 
 {
-    c.RoutePrefix = "openapi";
-    c.SwaggerEndpoint("/openapi/1.0.0/openapi.json", "CinemaAbyss API");
+    c.RoutePrefix = "api/events/openapi";
+    c.SwaggerEndpoint("/api/events/openapi/1.0.0/openapi.json", "CinemaAbyss API");
 });
 
 app.UseRouting();
