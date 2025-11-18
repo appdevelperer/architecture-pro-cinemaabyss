@@ -1,4 +1,5 @@
 using System;
+using Cinema.Events.Controllers;
 using Confluent.Kafka;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -9,10 +10,14 @@ using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Явно настройте логирование ПЕРВЫМ делом
 builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.SetMinimumLevel(LogLevel.Debug);
+// ✅ 2. Восстановление логгинга в DI + настройка провайдеров
+builder.Services.AddLogging(loggingBuilder =>
+{
+    loggingBuilder.ClearProviders(); // дублируем, но безопасно
+    loggingBuilder.AddConsole();
+    loggingBuilder.SetMinimumLevel(LogLevel.Debug);
+});
 
 Console.WriteLine("=== APPLICATION STARTING ===");
 
@@ -52,18 +57,18 @@ catch (Exception ex)
     Console.WriteLine($"Error registering IKafkaEventPublisher: {ex}");
 }
 
-// Kafka Consumer
-try
-{
-    Console.WriteLine("Registering KafkaEventConsumer...");
-    // builder.Services.AddHostedService<KafkaEventConsumer>();
-    builder.Services.AddSingleton<IKafkaEventReader, KafkaEventReader>();
-    Console.WriteLine("KafkaEventConsumer registered successfully");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Error registering KafkaEventConsumer: {ex}");
-}
+// // Kafka Consumer
+// try
+// {
+//     Console.WriteLine("Registering KafkaEventConsumer...");
+//     // builder.Services.AddHostedService<KafkaEventConsumer>();
+//     builder.Services.AddSingleton<IKafkaEventReader, KafkaEventReader>();
+//     Console.WriteLine("KafkaEventConsumer registered successfully");
+// }
+// catch (Exception ex)
+// {
+//     Console.WriteLine($"Error registering KafkaEventConsumer: {ex}");
+// }
 
 Console.WriteLine("=== ALL SERVICES REGISTERED ===");
 
@@ -82,8 +87,11 @@ try
     var producerConfig = serviceProvider.GetService<ProducerConfig>();
     Console.WriteLine($"ProducerConfig: {producerConfig != null}");
     
-    var kafkaConsumer = serviceProvider.GetService<KafkaEventConsumer>();
-    Console.WriteLine($"KafkaEventConsumer: {kafkaConsumer != null}");
+    // var kafkaConsumer = serviceProvider.GetService<KafkaEventConsumer>();
+    // Console.WriteLine($"KafkaEventConsumer: {kafkaConsumer != null}");
+
+    var loggerForController = serviceProvider.GetService<ILogger<EventsApiController>>();
+    Console.WriteLine($"ILogger<EventsApiController>: {loggerForController != null}");
 }
 catch (Exception ex)
 {

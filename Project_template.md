@@ -5,7 +5,7 @@
 1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
 Результат представьте в виде контейнерной диаграммы в нотации С4.
 Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+/analisys/c4_ContainerDiagram.plantuml
 
 
 ## Задание 2
@@ -248,7 +248,7 @@ cat .docker/config.json | base64
 
   - добавьте аддон
   ```bash
-  minikube addons enable ingress --> ЭТО НЕ ДЕЛАЛ
+  minikube addons enable ingress --> ЭТО НЕ ДЕЛАЛ (ИМ)
 
   Я ИСПОЛЬЗОВАЛ
   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/cloud/deploy.yaml
@@ -263,7 +263,7 @@ cat .docker/config.json | base64
 
   10. Вызовите
   ```bash
-  minikube tunnel --> ЭТО НЕ ДЕЛАЛ
+  minikube tunnel --> ЭТО НЕ ДЕЛАЛ (ИМ)
   ```
   11. Вызовите https://cinemaabyss.example.com/api/movies
   Вы должны увидеть вывод списка фильмов

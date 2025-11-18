@@ -7,11 +7,13 @@
     - movie-service: http://localhost:8081/api/movies - возвращает список фильмов из сервиса
     - proxy-service: http://localhost:8000/api/proxy
     - event-service: http://localhost:8082/openapi/index.html
-4.  При развертывании в k8s:
+4.  Запуск k8s
+    - Project_template, швг 2
+5.  При развертывании в k8s:
     - event-service: http://cinemaabyss.example.com/api/events/health
     - movie-service: https://cinemaabyss.example.com/api/movies
-5.  Запуск тестов в данном проекте
+6. Запуск тестов для контейнеров docker
     - imiroedov@miroedov:~/Development/sprint_2/architecture-pro-cinemaabyss/tests/postman$ ./run-tests.sh
-6.  Запуск k8s
-    - Project_template, швг 2
-7. 
+7.  Запуск тестов для k8s
+    - перейти в tests/postman 
+    - выполнить npm run test:kubernetes

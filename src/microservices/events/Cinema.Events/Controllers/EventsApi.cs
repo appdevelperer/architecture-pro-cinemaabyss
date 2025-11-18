@@ -126,13 +126,12 @@ namespace Cinema.Events.Controllers
                 _kafka.PublishAsync("payment-events", eventId, eventData);
                
                 _logger.LogInformation("Published payment event: {EventId} for payment {PaymentId}", eventId, paymentId);
-                _logger.LogInformation("й1");
                 Console.WriteLine("=== 3 ===");
                 
                 return new ObjectResult(paymentEvent)
                             {
                                 StatusCode = 201
-                            }; //Created($"/api/payments/{payment.Id}", payment);
+                            }; 
             }
             catch (Exception ex)
             {

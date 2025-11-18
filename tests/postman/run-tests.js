@@ -27,7 +27,7 @@ const argv = yargs(hideBin(process.argv))
     alias: 'r',
     description: 'Reporters to use (comma-separated)',
     type: 'string',
-    default: 'cli,htmlextra,junit'
+    default: 'cli'
   })
   .option('bail', {
     alias: 'b',
@@ -77,7 +77,7 @@ const newmanOptions = {
   reporter: {
     htmlextra: {
       export: path.join(reportsDir, `report-${argv.environment}-${new Date().toISOString().replace(/:/g, '-')}.html`),
-      template: 'default',
+      //template: 'default',
       showOnlyFails: false,
       noSyntaxHighlighting: false,
       testPaging: true,
@@ -99,6 +99,51 @@ const newmanOptions = {
 if (argv.folder) {
   newmanOptions.folder = argv.folder;
 }
+
+
+// QWEN
+
+newmanOptions.callback = function (err, args, execution, done) {
+  if (err) {
+    process.stderr.write(`⚠️ Newman execution error: ${err.message || err}\n`);
+  }
+
+  if (args.item) {
+    const req = args.request;
+    const res = args.response;
+    const name = args.item.name || 'Unnamed request';
+
+    process.stderr.write(`\n🚨 [${name}] — ${req.method} ${req.url}\n`);
+
+    if (req.body && req.body.raw) {
+      process.stderr.write(`📥 Request body: ${req.body.raw}\n`);
+    } else if (req.body && req.body.urlencoded) {
+      const formData = req.body.urlencoded.map(p => `${p.key}=${p.value}`).join('&');
+      process.stderr.write(`📥 Form data: ${formData}\n`);
+    } else {
+      process.stderr.write(`📥 No request body\n`);
+    }
+
+    if (res) {
+      process.stderr.write(`📤 Status: ${res.code} ${res.reason || ''}\n`);
+      if (res.stream && res.stream.length > 0) {
+        try {
+          const bodyStr = Buffer.from(res.stream).toString('utf8');
+          process.stderr.write(`📄 Response body: ${bodyStr}\n`);
+        } catch (e) {
+          process.stderr.write(`❗ Failed to decode response body\n`);
+        }
+      } else {
+        process.stderr.write(`📄 No response body\n`);
+      }
+    }
+  }
+
+  done();
+};
+
+//
+
 
 // Run Newman
 console.log(`Running tests against ${argv.environment} environment...`);

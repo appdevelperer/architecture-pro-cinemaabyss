@@ -584,9 +584,21 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "console.log('📥 [PRE Movie Event] Body:', pm.request.body.raw);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
+                  "console.log('📤 [POST Movie Event] Status:', pm.response.code);",
+                  "console.log('📄 [POST Movie Event] Response:', pm.response.text());",
+                  "",
                   "pm.test(\"Status code is 201\", function () {",
                   "    pm.response.to.have.status(201);",
                   "});",
@@ -662,9 +674,21 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "console.log('📥 [PRE Payment Event] Body:', pm.request.body.raw);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
+                  "console.log('📤 [POST Payment Event] Status:', pm.response.code);",
+                  "console.log('📄 [POST Payment Event] Response:', pm.response.text());",
+                  "",
                   "pm.test(\"Status code is 201\", function () {",
                   "    pm.response.to.have.status(201);",
                   "});",

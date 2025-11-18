@@ -25,13 +25,13 @@ spec:
                 name: proxy-service
                 port:
                   number: 8000
-          # - path: /api/movies
-          #   pathType: Prefix
-          #   backend:
-          #     service:
-          #       name: movies-service
-          #       port:
-          #         number: 8081                  
+          - path: /api/movies
+            pathType: Prefix
+            backend:
+              service:
+                name: movies-service
+                port:
+                  number: 8081                  
           #   http://localhost:8082/openapi/index.html
           - path: /openapi
             pathType: Prefix
@@ -40,3 +40,17 @@ spec:
                 name: events-service
                 port:
                   number: 8082
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: monolith
+                port:
+                  number: 8080   
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: monolith
+                port:
+                  number: 8080                          
