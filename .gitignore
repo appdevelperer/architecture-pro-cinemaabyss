@@ -154,3 +154,5 @@ go.work
 
 # Postman tests reports
 tests/postman/reports/
+src/microservices/proxy/cinema.apigateway/obj/Debug/net8.0/cinema.apigateway.AssemblyInfo.cs
+src/microservices/proxy/cinema.apigateway/obj/Debug/net8.0/cinema.apigateway.AssemblyInfoInputs.cache
