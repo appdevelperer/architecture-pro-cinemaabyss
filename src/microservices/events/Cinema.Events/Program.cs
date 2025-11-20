@@ -57,18 +57,18 @@ catch (Exception ex)
     Console.WriteLine($"Error registering IKafkaEventPublisher: {ex}");
 }
 
-// // Kafka Consumer
-// try
-// {
-//     Console.WriteLine("Registering KafkaEventConsumer...");
-//     // builder.Services.AddHostedService<KafkaEventConsumer>();
-//     builder.Services.AddSingleton<IKafkaEventReader, KafkaEventReader>();
-//     Console.WriteLine("KafkaEventConsumer registered successfully");
-// }
-// catch (Exception ex)
-// {
-//     Console.WriteLine($"Error registering KafkaEventConsumer: {ex}");
-// }
+// Kafka Consumer
+try
+{
+    Console.WriteLine("Registering KafkaEventConsumer...");
+    // builder.Services.AddHostedService<KafkaEventConsumer>();
+    builder.Services.AddSingleton<IKafkaEventReader, KafkaEventReader>();
+    Console.WriteLine("KafkaEventConsumer registered successfully");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error registering KafkaEventConsumer: {ex}");
+}
 
 Console.WriteLine("=== ALL SERVICES REGISTERED ===");
 

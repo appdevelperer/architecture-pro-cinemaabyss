@@ -64,11 +64,56 @@ namespace Cinema.Events.Controllers
         public virtual IActionResult CreateMovieEvent([FromBody]MovieEvent movieEvent)
         {
 
-            movieEvent.Status = "success";
-            return new ObjectResult(movieEvent)
+
+            try
+            {
+                _logger.LogInformation("Entered CreateMovieEvent");
+                Console.WriteLine("=== 1 ===");
+
+                // Генерируем уникальный ID события (в реальности — из БД или ID-сервиса)
+                var movieId = Random.Shared.Next(1000, 999999);
+                var timestamp = DateTime.UtcNow;
+
+                // Формируем события фильма
+                 movieEvent = new MovieEvent
+                {
+                    MovieId = movieId,
+                    UserId = movieEvent.UserId,
+                    Description = movieEvent.Description,
+                    Genres = movieEvent.Genres,
+                    Rating = movieEvent.Rating,
+                    Title = movieEvent.Title,
+                    Status = "success",
+                    Action = movieEvent.Action
+                };
+
+                // Публикуем событие в Kafka
+                var eventId = Guid.NewGuid().ToString();
+                var @event = new Event
+                {
+                    Id = eventId,
+                    Type = "movie",
+                    Timestamp = timestamp,
+                    Payload = movieEvent
+                };
+
+                Console.WriteLine("=== 2 ===");
+                var eventData = JsonConvert.SerializeObject(@event);
+                _kafka.PublishAsync("movie-events", eventId, eventData);
+               
+                _logger.LogInformation("Published movie event: {EventId} for movie {MovieId}", eventId, movieId);
+                Console.WriteLine("=== 3 ===");
+                
+                return new ObjectResult(movieEvent)
                             {
                                 StatusCode = 201
-                            }; //Created($"/api/payments/{payment.Id}", payment);
+                            }; 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create movie or publish event");
+                return StatusCode(500, new Error {  VarError = "Internal Server Error" });
+            }
         }
 
         /// <summary>
@@ -159,11 +204,56 @@ namespace Cinema.Events.Controllers
         public virtual IActionResult CreateUserEvent([FromBody] UserEvent userEvent)
         {
 
-            userEvent.Status = "success";
-            return new ObjectResult(userEvent)
+
+            try
+            {
+                _logger.LogInformation("Entered UserEvent");
+                Console.WriteLine("=== 1 ===");
+
+                // Генерируем уникальный ID платежа (в реальности — из БД или ID-сервиса)
+                var userId = Random.Shared.Next(1000, 999999);
+                var timestamp = DateTime.UtcNow;
+
+            
+
+                // Формируем событие пользователя
+                 userEvent = new UserEvent
+                {
+                    UserId = userId,
+                    Action = userEvent.Action,
+                    Email = userEvent.Email,
+                    Username = userEvent.Username,              
+                    Status = "success",
+                    Timestamp = timestamp
+                };
+
+                // Публикуем событие в Kafka
+                var eventId = Guid.NewGuid().ToString();
+                var @event = new Event
+                {
+                    Id = eventId,
+                    Type = "user",
+                    Timestamp = timestamp,
+                    Payload = userEvent
+                };
+
+                Console.WriteLine("=== 2 ===");
+                var eventData = JsonConvert.SerializeObject(@event);
+                _kafka.PublishAsync("user-events", eventId, eventData);
+               
+                _logger.LogInformation("Published user event: {EventId} for user {UserId}", eventId, userId);
+                Console.WriteLine("=== 3 ===");
+                
+                return new ObjectResult(userEvent)
                             {
                                 StatusCode = 201
-                            }; //Created($"/api/payments/{payment.Id}", payment);
+                            }; 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create user or publish event");
+                return StatusCode(500, new Error {  VarError = "Internal Server Error" });
+            }
         }
         
             /// <response code="500">Внутренняя ошибка сервера</response>
