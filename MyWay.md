@@ -18,4 +18,13 @@
     - перейти в tests/postman 
     - выполнить npm run test:kubernetes
 8.  как посмотреть логи пода в кубере
-    - 
+    - kubectl logs <pod-name> [-n <namespace>]
+    - kubectl logs monolith-8476598495-45kkm -n cinemaabyss
+    - kubectl describe pod monolith-8476598495-45kkm -n cinemaabyss --Если еще не стартовал контейнер изза ошибки
+
+9.  helm install cinemaabyss ./src/kubernetes/helm \
+  --namespace cinemaabyss \
+  --create-namespace
+10. Нужно установить ingress controller
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+    kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
