@@ -368,18 +368,28 @@ https://cinemaabyss.example.com/api/movies
 
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 helm repo update
-
+kubectl create namespace istio-system
 helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
-helm install istio-ingressgateway istio/gateway -n istio-system
+
 helm install istiod istio/istiod -n istio-system --wait
 
-helm install cinemaabyss .\src\kubernetes\helm --namespace cinemaabyss --create-namespace
+helm install istio-ingressgateway istio/gateway -n istio-system
+
+-----------------------------------
+# На control-plane ноде скачать образ
+docker pull docker.io/istio/proxyv2:1.20.0
+
+# Проверить что скачался
+docker images | grep proxyv2
+------------------------------------
+
+helm install cinemaabyss ./src/kubernetes/helm --namespace cinemaabyss --create-namespace
 
 kubectl label namespace cinemaabyss istio-injection=enabled --overwrite
 
 kubectl get namespace -L istio-injection
 
-kubectl apply -f .\src\kubernetes\circuit-breaker-config.yaml -n cinemaabyss
+kubectl apply -f ./src/kubernetes/circuit-breaker-config.yaml -n cinemaabyss
 
 ```
 
@@ -425,6 +435,7 @@ You can see 21 for the upstream_rq_pending_overflow value which means 21 calls s
 ```
 
 Приложите скриншот работы circuit breaker'а
+**РЕЗУЛЬТАТЫ**: /analisys/Results/Task5
 
 Удаляем все
 ```bash

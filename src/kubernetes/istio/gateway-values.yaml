@@ -1,0 +1,18 @@
+# gateway-values.yaml
+global:
+  hub: docker.io/istio
+  tag: 1.28.0
+  image: proxyv2
+
+labels:
+  istio.io/gateway-name: ingressgateway
+
+service:
+  type: LoadBalancer
+  ports:
+    - name: http2
+      port: 80
+      targetPort: 8080
+    - name: https
+      port: 443
+      targetPort: 8443

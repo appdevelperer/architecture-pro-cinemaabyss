@@ -28,3 +28,55 @@
 10. Нужно установить ingress controller
     kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
     kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
+11. Подробный лог пода
+    - kubectl describe pod istio-ingressgateway-667447b56f-r282x -n istio-system
+
+12. Удаление Namespace
+    - kubectl delete namespace istio-system
+
+13. Мой вариант установки istio
+    # Добавить репозиторий
+    helm repo add istio https://istio-release.storage.googleapis.com/charts
+    helm repo update
+
+    # Проверить доступные версии
+    helm search repo istio --versions | grep "1.20"
+
+    helm install istio-base istio/base \
+    --version 1.20.0 \
+    -n istio-system \
+    --set defaultRevision=default \
+    --wait
+
+
+    helm install istiod istio/istiod \
+    --version 1.20.0 \
+    -n istio-system \
+    --set global.hub=docker.io/istio \
+    --set global.tag=1.20.0 \
+    --set pilot.autoscaleEnabled=false \
+    --set pilot.resources.requests.memory=256Mi \
+    --set pilot.resources.requests.cpu=100m \
+    --wait
+
+
+
+    helm install istio-ingressgateway istio/gateway \
+    --version 1.20.0 \
+    -n istio-system \
+    --set global.hub=docker.io/istio \
+    --set global.tag=1.20.0 \
+    --set "podAnnotations.sidecar\.istio\.io/inject=\"false\"" \
+    --set "service.type=LoadBalancer" \
+    --set "service.ports[0].name=http" \
+    --set "service.ports[0].port=80" \
+    --set "service.ports[0].targetPort=8080" \
+    --set "service.ports[1].name=https" \
+    --set "service.ports[1].port=443" \
+    --set "service.ports[1].targetPort=8443"
+
+    # На control-plane ноде скачать образ
+    docker pull docker.io/istio/proxyv2:1.20.0
+
+    # Проверить что скачался
+    docker images | grep proxyv2
