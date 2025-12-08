@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("cinema.apigateway")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5103fbc8546495cfe9d3aed3ac39ff1414b55e05")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f7f999584fc2b61866a5f7b3129a7e75f924ff2b")]
 [assembly: System.Reflection.AssemblyProductAttribute("cinema.apigateway")]
 [assembly: System.Reflection.AssemblyTitleAttribute("cinema.apigateway")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -169,10 +169,26 @@ ingress:
   hosts:
     - host: cinemaabyss.example.com
       paths:
+        - path: /api/users
+          pathType: Prefix
+          service: monolith
+          port: 8080
+        - path: /health
+          pathType: Prefix
+          service: monolith
+          port: 8080        
+        - path: /api/subscriptions
+          pathType: Prefix
+          service: monolith
+          port: 8080                  
         - path: /
           pathType: Prefix
           service: proxy-service
           port: 80
+        - path: /api/payments
+          pathType: Prefix
+          service: monolith
+          port: 8080          
         - path: /api/events
           pathType: Prefix
           service: events-service
