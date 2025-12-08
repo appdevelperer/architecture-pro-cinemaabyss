@@ -1,0 +1,69 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title CinemaAbyss — Диаграмма контейнеров (C4 Level 2)
+
+Person(user, "Пользователь", "Смотрит фильмы, оформляет подписку, оценивает контент")
+
+System_Boundary(cinemaabyss, "CinemaAbyss") {
+    Container(api_gateway, "API Gateway (Proxy)", "Go", "Единая точка входа. Маршрутизация между монолитом и микросервисами (Strangler Fig)")
+
+    ' Микросервисы
+    Container(users_svc, "Users Service", "Go", "Управление пользователями: регистрация, профиль, аутентификация")
+    Container(movies_svc, "Movies Service", "Go", "Метаданные фильмов, жанры, рейтинги")
+    Container(payments_svc, "Payments Service", "Go", "Обработка платежей")
+    Container(subs_svc, "Subscriptions Service", "Go", "Управление подписками и тарифами")
+
+    ' Монолит (временно, в процессе миграции)
+    Container(monolith, "Монолит", "Go", "Временный компонент: обрабатывает оставшуюся функциональность (до полной миграции)")
+
+    ' Инфраструктурные компоненты
+    ContainerDb(users_db, "Users DB", "PostgreSQL", "Данные пользователей (только для Users Service)")
+    ContainerDb(movies_db, "Movies DB", "PostgreSQL", "Метаданные фильмов (только для Movies Service)")
+    ContainerDb(payments_db, "Payments DB", "PostgreSQL", "Данные платежей (только для Payments Service)")
+    ContainerDb(subs_db, "Subscriptions DB", "PostgreSQL", "Данные подписок (только для Subscriptions Service)")
+
+    ContainerDb(s3, "S3 Storage", "Объектное хранилище", "Обложки, трейлеры, медиа")
+    ContainerQueue(kafka, "Kafka", "Система сообщений", "Асинхронная коммуникация между сервисами")
+}
+
+' Внешние системы
+System_Ext(recommender, "Рекомендательная система", "Получает события о просмотрах и рейтингах")
+System_Ext(payment_gateway, "Платёжные системы", "Stripe, PayPal и др.")
+System_Ext(partner_cinemas, "Партнёрские кинотеатры", "Обмен метаданными и лицензиями")
+
+' === Внешние взаимодействия ===
+Rel(user, api_gateway, "HTTPS")
+
+' === Внутренние вызовы через API Gateway ===
+Rel(api_gateway, monolith, "Проксирует запросы", "HTTP")
+Rel(api_gateway, users_svc, "Проксирует запросы", "HTTP")
+Rel(api_gateway, movies_svc, "Проксирует запросы", "HTTP")
+Rel(api_gateway, payments_svc, "Проксирует запросы", "HTTP")
+Rel(api_gateway, subs_svc, "Проксирует запросы", "HTTP")
+
+' === Сервисы → свои БД ===
+Rel(users_svc, users_db, "Читает/записывает", "SQL")
+Rel(movies_svc, movies_db, "Читает/записывает", "SQL")
+Rel(payments_svc, payments_db, "Читает/записывает", "SQL")
+Rel(subs_svc, subs_db, "Читает/записывает", "SQL")
+
+' === Сервисы → хранилище ===
+Rel(movies_svc, s3, "Загрузка/чтение медиа", "S3 API")
+
+' === События через Kafka ===
+Rel(users_svc, kafka, "Публикует события", "UserRegistered, UserLoggedIn")
+Rel(movies_svc, kafka, "Публикует события", "MovieWatched, MovieRated")
+Rel(payments_svc, kafka, "Публикует события", "PaymentSucceeded, PaymentFailed")
+Rel(subs_svc, kafka, "Публикует события", "SubscriptionActivated, SubscriptionCancelled")
+
+' === Подписка на события (примеры) ===
+Rel(kafka, subs_svc, "Подписывается на UserRegistered", "Kafka")
+Rel(kafka, movies_svc, "Подписывается на UserRegistered", "Kafka (для персонализации)")
+Rel(kafka, recommender, "Пересылка событий", "Kafka Consumer → HTTPS")
+
+' === Внешние интеграции ===
+Rel(payments_svc, payment_gateway, "Интеграция", "HTTPS")
+Rel(movies_svc, partner_cinemas, "Синхронизация метаданных", "HTTPS")
+
+@enduml

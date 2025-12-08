@@ -1,0 +1,1 @@
+openapi-generator-cli generate   -i ./api-specification.yaml   -g aspnetcore   -o .   --additional-properties=packageName=Cinema.Events,aspnetCoreVersion=8.0,useSwashbuckle=true,operationIsAsync=true,sourceFolder=.,controllersFolder=Controllers,modelsFolder=Models

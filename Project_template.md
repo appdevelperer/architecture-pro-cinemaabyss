@@ -5,7 +5,8 @@
 1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
 Результат представьте в виде контейнерной диаграммы в нотации С4.
 Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+
+**РЕЗУЛЬТАТЫ** /analisys/c4_ContainerDiagram.plantuml
 
 
 ## Задание 2
@@ -48,7 +49,7 @@
 - Протестируйте постепенный переход, изменив переменную окружения MOVIES_MIGRATION_PERCENT в файле docker-compose.yml.
 
 ### 2. Kafka
- Вам как архитектуру нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
+Вам как архитектуру нужно также проверить гипотезу насколько просто реализовать применение Kafka в данной архитектуре.
 
 Для этого нужно сделать MVP сервис events, который будет при вызове API создавать и сам же читать сообщения в топике Kafka.
 
@@ -59,6 +60,7 @@
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka http://localhost:8090 
 
+**РЕЗУЛЬТАТЫ**: analisys/Results/Task2/Step2
 
 ## Задание 3
 
@@ -248,7 +250,12 @@ cat .docker/config.json | base64
 
   - добавьте аддон
   ```bash
-  minikube addons enable ingress
+  minikube addons enable ingress --> ЭТО НЕ ДЕЛАЛ (ИМ)
+
+  Я ИСПОЛЬЗОВАЛ
+  kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/cloud/deploy.yaml
+
+
   ```
   ```bash
   kubectl apply -f src/kubernetes/ingress.yaml
@@ -258,7 +265,7 @@ cat .docker/config.json | base64
 
   10. Вызовите
   ```bash
-  minikube tunnel
+  minikube tunnel --> ЭТО НЕ ДЕЛАЛ (ИМ)
   ```
   11. Вызовите https://cinemaabyss.example.com/api/movies
   Вы должны увидеть вывод списка фильмов
@@ -271,9 +278,12 @@ cat .docker/config.json | base64
   Часть тестов с health-чек упадет, но создание событий отработает.
   Откройте логи event-service и сделайте скриншот обработки событий
 
-#### Шаг 3
-Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
+**РЕЗУЛЬТАТЫ**: /analisys/Results/Task3/ProxyInKubernetes/Step2
 
+#### Шаг 3
+Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и скриншот вывода event-service после вызова тестов.
+
+**РЕЗУЛЬТАТЫ**: /analisys/Results/Task3/ProxyInKubernetes/Step3
 
 ## Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -331,7 +341,7 @@ kubectl delete  namespace cinemaabyss
 ```
 Запустите 
 ```bash
-helm install cinemaabyss .\src\kubernetes\helm --namespace cinemaabyss --create-namespace
+helm install cinemaabyss ./src/kubernetes/helm --namespace cinemaabyss --create-namespace
 ```
 Если в процессе будет ошибка
 ```code
@@ -349,6 +359,7 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+**РЕЗУЛЬТАТЫ**: /analisys/Results/Task4
 
 # Задание 5
 Компания планирует активно развиваться и для повышения надежности, безопасности, реализации сетевых паттернов типа Circuit Breaker и канареечного деплоя вам как архитектору необходимо развернуть istio и настроить circuit breaker для monolith и movies сервисов.
@@ -357,18 +368,28 @@ https://cinemaabyss.example.com/api/movies
 
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 helm repo update
-
+kubectl create namespace istio-system
 helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
-helm install istio-ingressgateway istio/gateway -n istio-system
+
 helm install istiod istio/istiod -n istio-system --wait
 
-helm install cinemaabyss .\src\kubernetes\helm --namespace cinemaabyss --create-namespace
+helm install istio-ingressgateway istio/gateway -n istio-system
+
+-----------------------------------
+# На control-plane ноде скачать образ
+docker pull docker.io/istio/proxyv2:1.20.0
+
+# Проверить что скачался
+docker images | grep proxyv2
+------------------------------------
+
+helm install cinemaabyss ./src/kubernetes/helm --namespace cinemaabyss --create-namespace
 
 kubectl label namespace cinemaabyss istio-injection=enabled --overwrite
 
 kubectl get namespace -L istio-injection
 
-kubectl apply -f .\src\kubernetes\circuit-breaker-config.yaml -n cinemaabyss
+kubectl apply -f ./src/kubernetes/circuit-breaker-config.yaml -n cinemaabyss
 
 ```
 
@@ -414,6 +435,7 @@ You can see 21 for the upstream_rq_pending_overflow value which means 21 calls s
 ```
 
 Приложите скриншот работы circuit breaker'а
+**РЕЗУЛЬТАТЫ**: /analisys/Results/Task5
 
 Удаляем все
 ```bash

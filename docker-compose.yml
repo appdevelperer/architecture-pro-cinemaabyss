@@ -28,6 +28,11 @@ services:
     container_name: cinemaabyss-zookeeper
     ports:
       - "2181:2181"
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 30s
+      timeout: 10s
+      retries: 3      
     networks:
       - cinemaabyss-network
 
@@ -39,12 +44,21 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "movie-events:1:1,user-events:1:1,payment-events:1:1"
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "movie-events:1:1,user-events:1:1,payment-events:1:1"      
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -85,24 +99,29 @@ services:
   # Events Microservice
   events-service:
     build:
-      context: ./src/microservices/events
+      context: ./src/microservices/events/Cinema.Events
       dockerfile: Dockerfile
     container_name: cinemaabyss-events-service
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - "8082:8082"
     environment:
       PORT: 8082
       KAFKA_BROKERS: kafka:9092
+      ASPNETCORE_HTTP_PORTS: "8082"
+      ASPNETCORE_URLS: "http://*:8082"
+      ASPNETCORE_ENVIRONMENT: Development
     networks:
       - cinemaabyss-network
 
   # Proxy Service (API Gateway)
   proxy-service:
     build:
-      context: ./src/microservices/proxy
+      context: ./src/microservices/proxy/cinema.apigateway
       dockerfile: Dockerfile
     container_name: cinemaabyss-proxy-service
     depends_on:
@@ -112,12 +131,12 @@ services:
     ports:
       - "8000:8000"
     environment:
-      PORT: 8000
       MONOLITH_URL: http://monolith:8080
       MOVIES_SERVICE_URL: http://movies-service:8081
       EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true"
       MOVIES_MIGRATION_PERCENT: "50"
+      ASPNETCORE_HTTP_PORTS: "8000"
     networks:
       - cinemaabyss-network
 
